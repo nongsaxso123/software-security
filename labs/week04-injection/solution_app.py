@@ -72,9 +72,11 @@ def ping():
     # FIX CWE-78: no shell; pass an argument array so input can't be interpreted as a command.
     # FIX: validate input against an allow-list pattern as defence in depth.
     import re
-    if not re.fullmatch(r"[A-Za-z0-9_.-]+", host):
+    # FIX CWE-88: host must start with a letter/digit, and "--" ends option parsing,
+    # so input like "-h" can't be read by ping as a flag.
+    if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9.-]{0,252}", host):
         return "invalid host\n", 400
-    out = subprocess.run(["ping", "-c", "1", host], shell=False, capture_output=True, text=True)
+    out = subprocess.run(["ping", "-c", "1", "--", host], shell=False, capture_output=True, text=True)
     return "<pre>%s</pre>" % (out.stdout + out.stderr)
 
 
